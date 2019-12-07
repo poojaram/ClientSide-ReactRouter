@@ -1,44 +1,89 @@
 import React, { Component } from 'react';
 import SignUpForm from './components/signup/SignUpForm';
+import firebase from 'firebase/app';
+
+import ChirperHeader from './components/chirper/ChirperHeader';
+import ChirpBox from './components/chirper/ChirpBox';
+import ChirpList from './components/chirper/ChirpList';
 
 class App extends Component {
   constructor(props){
     super(props);
-    this.state = {};
+    this.state = {loading:true};
   }
 
   //A callback function for registering new users
-  handleSignUp = (email, password, handle, avatar) => {
+  handleSignUp(email, password, handle, avatar) {
+    
     this.setState({errorMessage:null}); //clear any old errors
 
-    /* TODO: sign up user here */
+    firebase.auth().createUserWithEmailAndPassword(email, password).then(() => {
+     
+      return firebase.auth().currentUser.updateProfile({
+        displayName: handle,
+        photoURL: avatar
+      });
+    }).catch((error) => {
+      this.setState({errorMessage:error.message});
+    });
+
   }
 
   //A callback function for logging in existing users
-  handleSignIn = (email, password) => {
+  handleSignIn(email, password) {
     this.setState({errorMessage:null}); //clear any old errors
 
-    /* TODO: sign in user here */
+    firebase.auth().signInWithEmailAndPassword(email, password).catch((error) => {
+      this.setState({errorMessage:error.message});
+    });
   }
 
   //A callback function for logging out the current user
-  handleSignOut = () => {
+  handleSignOut(){
     this.setState({errorMessage:null}); //clear any old errors
 
     /* TODO: sign out user here */
+    firebase.auth().signOut().catch((error) => {
+      this.setState({errorMessage:error.errorMessage});
+    });
+  }
+
+  componentDidMount() {
+    this.authUnRegFunc = firebase.auth().onAuthStateChanged((firebaseUser) => {
+      
+      this.setState({loading:false});
+
+      if (firebaseUser) {
+        this.setState({user:firebaseUser});
+      }
+      else {
+        this.setState({user:null});
+      }
+    });
+
+  }
+  componentWillUnmount() {
+    this.authUnRegFunc();
   }
 
   render() {
 
-    let content = null; //content to render
+    let content=null; //content to render
+
+    if (this.state.loading) {
+      return (
+        <div className="text-center">
+          <i className="fa fa-spinner fa-spin fa-3x" aria-label="Connecting..."></i>
+        </div>);
+    }
 
     if(!this.state.user) { //if logged out, show signup form
       content = (
         <div className="container">
           <h1>Sign Up</h1>
           <SignUpForm 
-            signUpCallback={this.handleSignUp} 
-            signInCallback={this.handleSignIn} 
+            signUpCallback={(e,p,h,a) => this.handleSignUp(e,p,h,a)} 
+            signInCallback={(e,p) => this.handleSignIn(e,p)} 
             />
         </div>
       );
@@ -46,14 +91,19 @@ class App extends Component {
     else { //if logged in, show welcome message
       content = (
         <div>
-          <WelcomeHeader user={this.state.user}>
+          <ChirperHeader user={this.state.user}>
             {/* log out button is child element */}
             {this.state.user &&
-              <button className="btn btn-warning" onClick={this.handleSignOut}>
+              <button className="btn btn-warning" 
+                      onClick={() => this.handleSignOut()}>
                 Log Out {this.state.user.displayName}
               </button>
             }
-          </WelcomeHeader>
+          </ChirperHeader>
+          <ChirpBox currentUser={this.state.user} />
+          <ChirpList currentUser={this.state.user} />
+          
+          
         </div>
       );
     }

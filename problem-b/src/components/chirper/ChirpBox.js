@@ -1,6 +1,8 @@
 import React, { Component } from 'react'; //import React Component
 import './Chirper.css'; //load module-specific CSS
 
+import firebase from 'firebase/app';
+
 //A form the user can use to post a Chirp
 export default class ChirpBox extends Component {
   constructor(props){
@@ -9,18 +11,28 @@ export default class ChirpBox extends Component {
   }
 
   //when the text in the form changes
-  updatePost = (event) => {
+  updatePost(event) {
     this.setState({post: event.target.value});
   }
 
   //post a new chirp to the database
-  postChirp = (event) => {
+  postChirp(event){
     event.preventDefault(); //don't submit
     
-    /* TODO: add a new Chirp to the database */
+    let newChirp = {
 
+      text: this.state.post,
+      userId: this.props.currentUser.uid,
+      userName: this.props.currentUser.displayName,
+      userPhoto: this.props.currentUser.photoURL,
+      time: firebase.database.ServerValue.TIMESTAMP
+    };
 
-    this.setState({post:''}); //empty out post for next time
+    let r = firebase.database().ref('chirps');
+
+    r.push(newChirp);
+
+    this.setState({post:''}); 
   }
 
   //You do not need to modify this method!
@@ -37,7 +49,7 @@ export default class ChirpBox extends Component {
             <form>
               <textarea name="text" className="form-control mb-2" placeholder="What's Happening...?" 
                 value={this.state.post} 
-                onChange={this.updatePost}
+                onChange={(e) => this.updatePost(e)}
                 />
 
               {/* Only show this if the post length is > 140 */}
@@ -49,10 +61,10 @@ export default class ChirpBox extends Component {
                 {/* Disable if invalid post length */}
                 <button className="btn btn-primary" 
                   disabled={this.state.post.length === 0 || this.state.post.length > 140}
-                  onClick={this.postChirp} 
+                  onClick={(e) => this.postChirp(e)} 
                   >
                   <i className="fa fa-pencil-square-o" aria-hidden="true"></i> Share
-                </button> 					
+                </button>           
               </div>
             </form>
           </div>

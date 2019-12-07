@@ -2,6 +2,7 @@ import React, { Component } from 'react'; //import React Component
 import Moment from 'react-moment';
 import './Chirper.css'; //load module-specific CSS
 
+import firebase from 'firebase/app';
 //A list of chirps that have been posted
 export default class ChirpList extends Component {
   constructor(props){
@@ -9,11 +10,35 @@ export default class ChirpList extends Component {
     this.state = {chirps:[]};
   }
 
+  componentDidMount() {
+    this.chirpRef  = firebase.database().ref('chirps');
+    this.chirpRef.on('value', (snapshot) => {
+      let obj = snapshot.val();
+
+      this.setState({chirps:obj});
+    });
+  }
+
+  componentWillUnmount() {
+    this.chirpRef.off();
+  }
+
   render() {
     if(!this.state.chirps) return null; //if no chirps, don't display
+  
+    let chirpKeys = Object.keys(this.state.chirps);
+    let chirpArray = chirpKeys.map((key) => {
+      let chirpObj = this.state.chirps[key];
+      chirpObj.id = key;
+      return chirpObj;
+    });
 
-    /* TODO: produce a list of `<ChirpItems>` to render */
-    let chirpItems = []; //REPLACE THIS with an array of actual values!    
+    chirpArray.sort(function(a, b){return b.time - a.time});
+    
+    let chirpItems = chirpArray.map((chirp)=> {
+      return <ChirpItem chirp={chirp} key={chirp.id} currentUser={this.props.currentUser} />
+    });
+    
 
     return (
       <div className="container">
@@ -26,7 +51,30 @@ export default class ChirpList extends Component {
 class ChirpItem extends Component {
 
   likeChirp = () => {
-    /* TODO: update the chirp when it is liked */
+    let likeRef = firebase.database().ref('chirps/' + this.props.chirp.id + '/likes');
+
+    let likes = {};
+  
+    likeRef.once("value", snapshot => {
+      const v = snapshot.val();
+    
+      if (v) {
+        console.log(v);
+        likes = v;
+      }
+    });
+
+    if (likes[this.props.currentUser.uid]) {
+      likes[this.props.currentUser.uid] = null;
+    }
+    else {
+      likes[this.props.currentUser.uid] = true;
+    }
+
+   
+    firebase.database().ref('chirps/' + this.props.chirp.id + '/likes').set(likes).catch((error) => {
+      console.log(error.errorMessage);
+    });
   }
  
   render() {

@@ -15,7 +15,7 @@ class SignUpForm extends Component {
   }
 
   //update state for specific field
-  handleChange = (event) => {
+  handleChange(event) {
     let field = event.target.name; //which input
     let value = event.target.value; //what value
 
@@ -25,14 +25,14 @@ class SignUpForm extends Component {
   }
 
   //handle signUp button
-  handleSignUp = (event) => {
+  handleSignUp(event) {
     event.preventDefault(); //don't submit
     let avatar = this.state.avatar || 'img/no-user-pic.png'; //default to local pic
     this.props.signUpCallback(this.state.email, this.state.password, this.state.handle, avatar);
   }
 
   //handle signIn button
-  handleSignIn = (event) => {
+  handleSignIn(event) {
     event.preventDefault(); //don't submit
     this.props.signInCallback(this.state.email, this.state.password);
   }
@@ -47,7 +47,7 @@ class SignUpForm extends Component {
             id="email" 
             type="email" 
             name="email"
-            onChange={this.handleChange}
+            onChange={(e) => this.handleChange(e)}
             />
         </div>
         
@@ -58,7 +58,7 @@ class SignUpForm extends Component {
             id="password" 
             type="password"
             name="password"
-            onChange={this.handleChange}
+            onChange={(e) => this.handleChange(e)}
             />
         </div>
 
@@ -68,7 +68,7 @@ class SignUpForm extends Component {
           <input className="form-control" 
             id="handle" 
             name="handle"
-            onChange={this.handleChange}
+            onChange={(e) => this.handleChange(e)}
             />
         </div>
 
@@ -80,14 +80,22 @@ class SignUpForm extends Component {
             id="avatar" 
             name="avatar" 
             placeholder="http://www.example.com/my-picture.jpg" 
-            onChange={this.handleChange}
+            onChange={(e) => this.handleChange(e)} 
             />
         </div>
 
         {/* buttons */}
         <div className="form-group">
-          <button className="btn btn-primary mr-2" onClick={this.handleSignUp}>Sign-up</button>
-          <button className="btn btn-primary" onClick={this.handleSignIn}>Sign-in</button>
+          <button className="btn btn-primary mr-2" 
+            onClick={(e) => this.handleSignUp(e)}
+          >
+            Sign-up
+          </button>
+          <button className="btn btn-primary"
+            onClick={(e) => this.handleSignIn(e)}
+          >
+            Sign-in
+          </button>
         </div>
       </form>
     )
